@@ -6,12 +6,16 @@ import android.graphics.ImageDecoder
 import android.graphics.Insets.add
 import android.graphics.drawable.AnimatedImageDrawable
 import android.graphics.drawable.Drawable
+
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.provider.Settings.Global.getString
+import android.util.Log
+import android.util.Size
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -27,27 +31,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.anti_procrastination.ui.theme.AntiprocrastinationTheme
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Shapes
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.*
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 
 
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import java.lang.Integer.getInteger
+import java.lang.reflect.Array.set
 
 import java.util.concurrent.Flow
 import kotlin.concurrent.fixedRateTimer
@@ -57,9 +71,24 @@ import kotlin.math.ceil
 
 
 class MainActivity : ComponentActivity() {
+    var isOpened by mutableStateOf(true)
+    override fun onPause() {
+        super.onPause()
+     
+        isOpened = false
+        Log.d("lifecycle", "stopped")
+    }
 
+    override fun onResume() {
+        super.onResume()
+        isOpened = true
+        val toast = Toast.makeText(this, "Ріст зкинуто", Toast.LENGTH_SHORT)
+        toast.show()
+        Log.d("lifecycle", "opened")
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        isOpened = true
         setContent {
             AntiprocrastinationTheme {
                 // A surface container using the 'background' color from the theme
@@ -67,9 +96,11 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+
                     Background()
 
-                    Amethyst_growth()
+                    Amethyst_growth(isOpened = isOpened)
+
                 }
             }
         }
@@ -78,7 +109,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Amethyst_growth(modifier: Modifier=Modifier){
+fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     val changer = arrayOf(R.drawable.phase_1, R.drawable.phase_2, R.drawable.phase_3, R.drawable.phase_4)
     var counter by rememberSaveable {
         mutableIntStateOf(0)
@@ -86,6 +117,7 @@ fun Amethyst_growth(modifier: Modifier=Modifier){
     var amethystScore by rememberSaveable {
         mutableIntStateOf(0)
     }
+    var isPressed by rememberSaveable { mutableStateOf(false) }
     var amethyst = painterResource(changer[counter])
     val sharedPref = LocalContext.current.getSharedPreferences(
         "Score", Context.MODE_PRIVATE)
@@ -95,14 +127,14 @@ fun Amethyst_growth(modifier: Modifier=Modifier){
     }
 
     var highScore = sharedPref.getInt("Score", 0)
-
-    val timer = object : CountDownTimer(20000, 1000) {
+    val timer =  CountDownTimer(20000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
-            if ((counter == 3) and (millisUntilFinished<=5000)) {
+            if ((counter == 3) and (millisUntilFinished <= 5000)) {
                 cancel()
                 counter = 0
-                amethystScore+=1
+                amethystScore += 1
             }
+
         }
 
         override fun onFinish() {
@@ -111,18 +143,48 @@ fun Amethyst_growth(modifier: Modifier=Modifier){
 
         }
     }
-    timer.start()
-
+    if(isOpened and isPressed){
+        timer.start()
+    }
+    else{
+        counter=0
+        timer.cancel()
+    }
     Text(
-        text = "Amethysts:$highScore"
+        text = "Amethysts:$highScore",
+        fontSize = 26.sp,
+        color = Color.White,
+        fontFamily = FontFamily(Font(R.font.minecraft))
     )
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
 
-    Image(
-        painter = amethyst,
-        contentDescription = "amethyst" ,
-        Modifier
-            .size(70.dp)
-    )
+        Image(
+            painter = amethyst,
+            contentDescription = "amethyst",
+            Modifier
+                .size(640.dp)
+
+        )
+        var show by rememberSaveable { mutableStateOf(true) }
+        Button(
+            modifier = Modifier
+                .width(240.dp)
+                .height(60.dp)
+                .alpha(if (show) 1f else 0f),
+            onClick = { isPressed = !isPressed
+                        show = !show
+                      },
+            shape = RoundedCornerShape(0),
+            enabled = if(show) true else false
+        )
+        {
+            Text(
+            text = "Start",
+            fontFamily = FontFamily(Font(R.font.minecraft)),
+            fontSize = 24.sp
+        )
+        }
+    }
 }
 
 @Composable
@@ -130,13 +192,20 @@ fun Background(){
     val cave = painterResource(R.drawable.background)
     Image(
         painter = cave,
-        contentDescription = "background")
+        contentDescription = "background",
+        contentScale = ContentScale.FillHeight
+    )
 }
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     AntiprocrastinationTheme {
-        Background()
-        Amethyst_growth()
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Background()
+            Amethyst_growth(isOpened = true)
+        }
     }
 }
