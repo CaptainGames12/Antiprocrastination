@@ -127,7 +127,7 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     }
 
     var highScore = sharedPref.getInt("Score", 0)
-    val timer =  CountDownTimer(20000, 1000) {
+    val timer = object : CountDownTimer(20000, 1000) {
         override fun onTick(millisUntilFinished: Long) {
             if ((counter == 3) and (millisUntilFinished <= 5000)) {
                 cancel()
