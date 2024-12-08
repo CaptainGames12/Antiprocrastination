@@ -31,12 +31,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.anti_procrastination.ui.theme.AntiprocrastinationTheme
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Shapes
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -51,15 +54,21 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 import java.lang.Integer.getInteger
 import java.lang.reflect.Array.set
 
@@ -86,32 +95,69 @@ class MainActivity : ComponentActivity() {
         toast.show()
         Log.d("lifecycle", "opened")
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         isOpened = true
         setContent {
             AntiprocrastinationTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
+                val navController: NavHostController = rememberNavController()
+                NavHost(
+                    navController = navController,
+                    startDestination = "Main"
+                )
+                {
 
-                    Background()
+                    composable("Main"){
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        )
+                        {
 
-                    Amethyst_growth(isOpened = isOpened)
+
+                            Background()
+                            Amethyst_growth(isOpened = isOpened)
+
+
+                        }
+                        Button(
+                            modifier = Modifier
+                                .padding(top = 60.dp, start =16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(254, 189, 40)),
+                            onClick =
+                            {
+                                navController.navigate("ShopScreen")
+                            },
+                            shape = RoundedCornerShape(0),
+                            enabled = true
+                        )
+                        {
+                            Text(
+                                text = "Shop",
+                                fontFamily = FontFamily(Font(R.font.minecraft)),
+                                fontSize = 24.sp,
+
+                                )
+                            Log.d("nav1", "navigate")
+                        }
+                    }
+                    composable("ShopScreen"){
+                        Shop()
+                    }
+                }
+
 
                 }
             }
         }
 
     }
-}
 
 @Composable
 fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     val changer = arrayOf(R.drawable.phase_1, R.drawable.phase_2, R.drawable.phase_3, R.drawable.phase_4)
-    var counter by rememberSaveable {
+    var counter by rememberSaveable{
         mutableIntStateOf(0)
     }
     var amethystScore by rememberSaveable {
@@ -121,32 +167,37 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     var amethyst = painterResource(changer[counter])
     val sharedPref = LocalContext.current.getSharedPreferences(
         "Score", Context.MODE_PRIVATE)
-    with (sharedPref.edit()) {
+    with (sharedPref.edit())
+    {
         putInt("Score", amethystScore)
         apply()
     }
 
     var highScore = sharedPref.getInt("Score", 0)
-    val timer = object : CountDownTimer(20000, 1000) {
-        override fun onTick(millisUntilFinished: Long) {
-            if ((counter == 3) and (millisUntilFinished <= 5000)) {
-                cancel()
-                counter = 0
-                amethystScore += 1
+    val timer = remember {
+        object : CountDownTimer(20000, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                if ((counter == 3) and (millisUntilFinished <= 5000)) {
+                    cancel()
+                    counter = 0
+                    amethystScore += 1
+                }
+
             }
 
-        }
+            override fun onFinish() {
 
-        override fun onFinish() {
+                counter += 1
 
-            counter += 1
-
+            }
         }
     }
-    if(isOpened and isPressed){
+    if(isOpened and isPressed)
+    {
         timer.start()
     }
-    else{
+    else
+    {
         counter=0
         timer.cancel()
     }
@@ -154,9 +205,11 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
         text = "Amethysts:$highScore",
         fontSize = 26.sp,
         color = Color.White,
-        fontFamily = FontFamily(Font(R.font.minecraft))
+        fontFamily = FontFamily(Font(R.font.minecraft)),
+        modifier = Modifier.padding(16.dp)
     )
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center)
+    {
 
         Image(
             painter = amethyst,
@@ -171,11 +224,14 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
                 .width(240.dp)
                 .height(60.dp)
                 .alpha(if (show) 1f else 0f),
-            onClick = { isPressed = !isPressed
-                        show = !show
-                      },
+            onClick =
+            {
+                isPressed = !isPressed
+                show = !show
+
+            },
             shape = RoundedCornerShape(0),
-            enabled = if(show) true else false
+            enabled = if(show) {true} else {false}
         )
         {
             Text(
@@ -190,22 +246,49 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
 @Composable
 fun Background(){
     val cave = painterResource(R.drawable.background)
+    //Image - composable function for printing resources
     Image(
         painter = cave,
         contentDescription = "background",
         contentScale = ContentScale.FillHeight
     )
 }
+//попередній перегляд
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     AntiprocrastinationTheme {
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
-        ) {
+        )
+        {
+
             Background()
             Amethyst_growth(isOpened = true)
+            Button(
+                modifier = Modifier
+                    .width(240.dp)
+                    .height(60.dp)
+                    .padding(start = 16.dp, bottom = 730.dp, top = 60.dp, end = 190.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(254, 189, 40)),
+                onClick =
+                {
+                    /*TO DO*/
+                },
+                shape = RoundedCornerShape(0),
+                enabled = true
+            )
+            {
+                Text(
+                    text = "Shop",
+                    fontFamily = FontFamily(Font(R.font.minecraft)),
+                    fontSize = 24.sp,
+
+                )
+            }
+        }
         }
     }
-}
+
