@@ -221,8 +221,6 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
         var show by rememberSaveable { mutableStateOf(true) }
         Button(
             modifier = Modifier
-                .width(240.dp)
-                .height(60.dp)
                 .alpha(if (show) 1f else 0f),
             onClick =
             {
