@@ -77,9 +77,10 @@ import kotlin.concurrent.fixedRateTimer
 import kotlin.concurrent.timer
 
 import kotlin.math.ceil
-
+var score = 0
 
 class MainActivity : ComponentActivity() {
+
     var isOpened by mutableStateOf(true)
     override fun onPause() {
         super.onPause()
@@ -163,6 +164,7 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     var amethystScore by rememberSaveable {
         mutableIntStateOf(0)
     }
+    score = amethystScore
     var isPressed by rememberSaveable { mutableStateOf(false) }
     var amethyst = painterResource(changer[counter])
     val sharedPref = LocalContext.current.getSharedPreferences(
