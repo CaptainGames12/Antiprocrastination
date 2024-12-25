@@ -1,24 +1,13 @@
 package com.example.anti_procrastination
 
-import android.animation.ObjectAnimator
 import android.content.Context
-import android.graphics.ImageDecoder
-import android.graphics.Insets.add
-import android.graphics.drawable.AnimatedImageDrawable
-import android.graphics.drawable.Drawable
 
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
 import android.os.CountDownTimer
-import android.provider.Settings.Global.getString
 import android.util.Log
-import android.util.Size
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -26,57 +15,36 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.anti_procrastination.ui.theme.AntiprocrastinationTheme
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Shapes
+
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.res.vectorResource
+
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.vector.*
+
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.lifecycle.viewmodel.compose.viewModel
+
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.zIndex
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import kotlinx.serialization.Serializable
-import java.lang.Integer.getInteger
-import java.lang.reflect.Array.set
 
-import java.util.concurrent.Flow
-import kotlin.concurrent.fixedRateTimer
-import kotlin.concurrent.timer
-
-import kotlin.math.ceil
 var score = 0
 
 class MainActivity : ComponentActivity() {
@@ -84,16 +52,17 @@ class MainActivity : ComponentActivity() {
     var isOpened by mutableStateOf(true)
     override fun onPause() {
         super.onPause()
-     
+
         isOpened = false
+        val toast = Toast.makeText(this, "Ріст зкинуто", Toast.LENGTH_SHORT)
+        toast.show()
         Log.d("lifecycle", "stopped")
     }
 
     override fun onResume() {
         super.onResume()
         isOpened = true
-        val toast = Toast.makeText(this, "Ріст зкинуто", Toast.LENGTH_SHORT)
-        toast.show()
+
         Log.d("lifecycle", "opened")
     }
 
@@ -223,7 +192,8 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
         var show by rememberSaveable { mutableStateOf(true) }
         Button(
             modifier = Modifier
-                .alpha(if (show) 1f else 0f),
+                .alpha(if (show) 1f else 0f)
+                .size(width = 140.dp, height = 80.dp),
             onClick =
             {
                 isPressed = !isPressed

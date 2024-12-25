@@ -2,6 +2,7 @@ package com.example.anti_procrastination
 
 
 import android.media.MediaPlayer
+import android.util.Log
 import android.widget.Toast
 import android.widget.Toast.LENGTH_SHORT
 
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.rounded.KeyboardArrowRight
@@ -25,13 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
+
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -46,8 +46,9 @@ import androidx.compose.ui.unit.sp
 @Preview
 @Composable
 fun Shop(){
-
+    //звертаємося до простору всередині програми
     val context = LocalContext.current
+    //створюємо дата клас для музикальних пластинок, а також список пластинок, які є екземплярами класу MusicDisc
     data class MusicDisc(val disc: MediaPlayer, val name: String, val cover: Int, val price: Int)
     val playlist =listOf(
         MusicDisc(
@@ -57,12 +58,19 @@ fun Shop(){
             price = 5
         ),
         MusicDisc(
-            disc = MediaPlayer.create(context, R.raw.pigstep),
+            disc = MediaPlayer.create(context, R.raw.precipice),
             name = "Precipice",
             cover = R.drawable.precipice,
             price = 10
+        ),
+        MusicDisc(
+            disc = MediaPlayer.create(context, R.raw.cat),
+            name = "Cat",
+            cover = R.drawable.cat,
+            price = 15
         )
     )
+    //створюємо задній фон і за допомогою Crop розтягуємо зображення жеоди на екрані
     Image(
             painter = painterResource(R.drawable.shop),
             contentDescription = null,
@@ -73,8 +81,10 @@ fun Shop(){
 
 
         )
+    //усі змінні-стани, що стосуються перемикання пластинок
     var index by remember{mutableIntStateOf(0)}
     var music by remember {mutableStateOf(playlist[0])}
+    var isPlaying by remember { mutableStateOf(false) }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -83,6 +93,7 @@ fun Shop(){
 
         )
     {
+        //назва пластинки та її ціна
         Text(
             text = music.name+": "+music.price,
             fontFamily = FontFamily(Font(R.font.minecraft)),
@@ -92,6 +103,7 @@ fun Shop(){
                 .padding(bottom = 16.dp)
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
+            //стрілка для перемикання на попередню пластинку
             Icon(
                 Icons.Rounded.KeyboardArrowLeft,
                 contentDescription = null,
@@ -100,19 +112,22 @@ fun Shop(){
                         try {
                             index -= 1
                             music = playlist[index]
+
                         }
                         catch(exception:IndexOutOfBoundsException){
                             val lastIndex = playlist.size-1
                             music = playlist[lastIndex]
                         }
-                    },
+                    }
+                    .size(46.dp),
                 tint = Color.White
             )
+            //вигляд пластинки
             Image(
                 painter = painterResource(music.cover),
                 contentDescription = music.name
             )
-
+            //стрілка для перемикання на попередню пластинку
             Icon(
                 Icons.Rounded.KeyboardArrowRight,
                 contentDescription = null,
@@ -125,27 +140,38 @@ fun Shop(){
                         catch(exception:IndexOutOfBoundsException){
                             index = 0
                             music = playlist[index]
+                            Log.d("change", "change is done")
                         }
-                    },
+                    }
+                    .size(46.dp),
                 tint = Color.White
             )
 
         }
+        //кнопка для програвання самого треку
         Icon(
             Icons.Rounded.PlayArrow,
             contentDescription = null,
             modifier = Modifier
                 .clickable
                 {
-                    if(score == music.price)
+                    isPlaying = !isPlaying
+                    if(score >= music.price && isPlaying)
                     {
                         music.disc.start()
+
+                    }
+                    else if(!isPlaying){
+                        music.disc.pause()
                     }
                     else{
-                        Toast.makeText(context, "Недостатньо аметисту", LENGTH_SHORT)
+                        //виводимо спливаючий текст у разі недостачі аметисту
+                        Toast.makeText(context, "Недостатньо аметисту", LENGTH_SHORT).show()
                     }
-                },
-            tint = Color.White
+                }
+                .size(46.dp),
+            tint = Color.White,
+
         )
     }
 }
