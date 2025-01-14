@@ -1,9 +1,12 @@
 package com.example.anti_procrastination
 
+import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 
 import android.os.Bundle
 import android.os.CountDownTimer
+
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -41,6 +44,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.getString
 
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -49,6 +53,7 @@ var score = 0
 
 class MainActivity : ComponentActivity() {
 
+    //створюємо систему перевірки чи знаходиться користувач у застосунку
     var isOpened by mutableStateOf(true)
     override fun onPause() {
         super.onPause()
@@ -71,6 +76,11 @@ class MainActivity : ComponentActivity() {
         isOpened = true
         setContent {
             AntiprocrastinationTheme {
+                //навігація між екранами
+                val context = LocalContext.current
+
+                (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
                 val navController: NavHostController = rememberNavController()
                 NavHost(
                     navController = navController,
@@ -91,6 +101,7 @@ class MainActivity : ComponentActivity() {
 
 
                         }
+                        //оголошуємо кнопку, що перекидає на магазин
                         Button(
                             modifier = Modifier
                                 .padding(top = 60.dp, start =16.dp),
@@ -126,40 +137,44 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
+    //масив має у собі всі фази росту кристалу. За допомогою таймера лічильник збільшується і через це Image змінює свій resource
     val changer = arrayOf(R.drawable.phase_1, R.drawable.phase_2, R.drawable.phase_3, R.drawable.phase_4)
     var counter by rememberSaveable{
         mutableIntStateOf(0)
     }
-    var amethystScore by rememberSaveable {
-        mutableIntStateOf(0)
-    }
-    score = amethystScore
-    var isPressed by rememberSaveable { mutableStateOf(false) }
-    var amethyst = painterResource(changer[counter])
     val sharedPref = LocalContext.current.getSharedPreferences(
-        "Score", Context.MODE_PRIVATE)
-    with (sharedPref.edit())
-    {
-        putInt("Score", amethystScore)
-        apply()
+        "com.example.antiprocrastination.SCORE_KEY", Context.MODE_PRIVATE)
+    var amethystScore by rememberSaveable{
+        mutableIntStateOf(sharedPref.getInt("com.example.antiprocrastination.SCORE_KEY", 0))
     }
 
-    var highScore = sharedPref.getInt("Score", 0)
+    var isPressed by rememberSaveable { mutableStateOf(false) }
+    var amethyst = painterResource(changer[counter])
+
+
+    //через кожну 4-ту фазу збільшуємо кількість аметисту і виводимо у Text
     val timer = remember {
         object : CountDownTimer(20000, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                if ((counter == 3) and (millisUntilFinished <= 5000)) {
+            override fun onTick(millisUntilFinished: Long)
+            {
+                if ((counter == 3) and (millisUntilFinished <= 5000))
+                {
                     cancel()
                     counter = 0
                     amethystScore += 1
+                    with (sharedPref.edit())
+                    {
+                        putInt("com.example.antiprocrastination.SCORE_KEY", amethystScore)
+                        commit()
+                    }
+
                 }
 
             }
 
-            override fun onFinish() {
-
+            override fun onFinish()
+            {
                 counter += 1
-
             }
         }
     }
@@ -172,8 +187,11 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
         counter=0
         timer.cancel()
     }
+
+
+    score = amethystScore
     Text(
-        text = "Amethysts:$highScore",
+        text = "Amethysts:$amethystScore",
         fontSize = 26.sp,
         color = Color.White,
         fontFamily = FontFamily(Font(R.font.minecraft)),
@@ -181,7 +199,7 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
     )
     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center)
     {
-
+        //зображення аметисту
         Image(
             painter = amethyst,
             contentDescription = "amethyst",
@@ -189,6 +207,7 @@ fun Amethyst_growth(modifier: Modifier=Modifier, isOpened:Boolean){
                 .size(640.dp)
 
         )
+        //кнопка початку. Не відображати, якщо натиснуто
         var show by rememberSaveable { mutableStateOf(true) }
         Button(
             modifier = Modifier
@@ -242,7 +261,9 @@ fun GreetingPreview() {
                     .width(240.dp)
                     .height(60.dp)
                     .padding(start = 16.dp, bottom = 730.dp, top = 60.dp, end = 190.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(254, 189, 40)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(254, 189, 40)
+                ),
                 onClick =
                 {
                     /*TO DO*/
@@ -259,6 +280,6 @@ fun GreetingPreview() {
                 )
             }
         }
-        }
     }
+}
 
